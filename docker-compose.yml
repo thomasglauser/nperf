@@ -3,7 +3,7 @@ version: '3.9'
 services:
     nperf:
         container_name: nperf
-        image: nperf:latest
+        image: thomasglauser00/nperf:latest
         environment:
             - nperf_interval=${nperf_interval}
             - latency_servers=${latency_servers}
