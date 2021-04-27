@@ -1,0 +1,27 @@
+version: '3.9'
+
+services:
+    nperf:
+        container_name: nperf
+        image: nperf:latest
+        environment:
+            - nperf_interval=${nperf_interval}
+            - latency_servers=${latency_servers}
+            - influx_url=${influx_url}
+            - influx_token=${influx_token}
+            - influx_bucket=${influx_bucket}
+            - influx_org=${influx_org}
+        links:
+            - 'influxdb:influxdb'
+        dns:
+            - 1.1.1.1
+            - 8.8.8.8
+    influxdb:
+        container_name: influxdb
+        image: influxdb:latest
+        ports:
+            - '8086:8086'
+        volumes:
+            - influxdb-storage:/var/lib/influxdb
+volumes:
+    influxdb-storage:
