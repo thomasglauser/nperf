@@ -55,7 +55,6 @@ influx_token = _zqUe1mEHxmrcrJj9Ii8WZG0ZJU8yOUJ8nGHnhsrYwh2MfOU5AitI8LNktLTRQc-z
 
 influx_bucket = nperf
 influx_org = nperf
-
 ```
 
 Now start the project with docker-compose
