@@ -20,7 +20,7 @@
 
 ## Demo
 
-![Dashboard](docs\images\dashboard.PNG)
+![Dashboard](https://github.com/AUThomasCH/nperf/raw/main/docs/images/dashboard.PNG)
 
 ## Deployment with Docker Compose
 
