@@ -18,7 +18,11 @@
 -   Everything is containerized
 -   Simple configuration with docker-compose
 
-## Deployment
+## Demo
+
+![Dashboard](docs\images\dashboard.PNG)
+
+## Deployment with Docker Compose
 
 To deploy this project run
 
@@ -66,6 +70,8 @@ You will need to do some initial configuration and generate a token for authenti
 
 After you generated a token, copy and paste it in the .env file and rerun `docker-compose up`.
 nperf can now authenticate itself with the token.
+
+Done!
 
 ## Contributing
 
