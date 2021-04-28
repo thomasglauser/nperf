@@ -39,7 +39,6 @@ Add the following configuration:
 
 ```
 [NPERF]
-
 # This defines the sleep time in seconds, before a new test is executed
 nperf_interval = 300
 
