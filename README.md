@@ -38,22 +38,24 @@ Add the following configuration:
 
 ```
 [NPERF]
-# This defines the sleep time in seconds, before a new test is executed
-nperf_interval = 300
+# Those values define the interval in seconds for both speedtest and latency test.
+speedtest_interval = 300
+latency_interval = 30
 
 # This addresses defines the servers which will be pinged, seperated with spaces!
 # If a server isn't reacable, no value will be stored in the database!
-latency_servers = 1.1.1.1 google.com github.com
+latency_servers = google.com github.com vzug.com
 
 [INFLUX_DB]
 # This is the address of the influxdb
 influx_url = "http://influxdb:8086"
 
 # This is the authentication token. If you need to change or set it initially, just rerun 'docker-compose up' after it.
-influx_token = _zqUe1mEHxmrcrJj9Ii8WZG0ZJU8yOUJ8nGHnhsrYwh2MfOU5AitI8LNktLTRQc-zKQzpKc_76-t9F5r4samaA==
+influx_token = <influxdb api token>
 
-influx_bucket = nperf
-influx_org = nperf
+influx_bucket = test
+influx_org = test
+
 ```
 
 Now start the project with docker-compose
