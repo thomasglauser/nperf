@@ -1,120 +1,111 @@
+"""nperf main script"""
+
 import os
 import time
-from pathlib import Path
-
-import speedtest
 from dotenv import load_dotenv
 from influxdb_client import InfluxDBClient
 from influxdb_client.client.write_api import SYNCHRONOUS
-from ping3 import ping as runPingTest
+from ping3 import ping as run_ping_test
+import speedtest
+
+# Load environment variables
+load_dotenv(override=True)
+
+# Constants from environment variables
+NPERF_INTERVAL = int(os.getenv("nperf_interval", "60"))
+LATENCY_SERVERS = os.getenv("latency_servers", "").split()
+INFLUX_URL = os.getenv("influx_url")
+INFLUX_TOKEN = os.getenv("influx_token")
+INFLUX_BUCKET = os.getenv("influx_bucket")
+INFLUX_ORG = os.getenv("influx_org")
 
 
-load_dotenv()
-env_path = Path('.') / '.env'
-load_dotenv(dotenv_path=env_path)
-
-
-nperf_interval = os.getenv('nperf_interval')
-latency_servers = os.getenv('latency_servers')
-influx_url = os.getenv('influx_url')
-influx_token = os.getenv('influx_token')
-influx_bucket = os.getenv('influx_bucket')
-influx_org = os.getenv('influx_org')
-
-
-client = InfluxDBClient(url=influx_url, token=influx_token)
+def print_env_variables():
+    """Print the environment variables for verification on startup."""
+    print("\n")
+    print("⚙️ Environment Variables:")
+    print(f"nperf_interval: {NPERF_INTERVAL}")
+    print(f"latency_servers: {LATENCY_SERVERS}")
+    print(f"influx_url: {INFLUX_URL}")
+    print(f"influx_token: {'<hidden>' if INFLUX_TOKEN else 'None'}")
+    print(f"influx_bucket: {INFLUX_BUCKET}")
+    print(f"influx_org: {INFLUX_ORG}")
+    print("----------------\n")
 
 
 def run_speedtest():
+    """Runs the speed test and returns download, upload speeds and ping."""
     try:
-        servers = []
-        threads = None
-
         s = speedtest.Speedtest()
-        s.get_servers(servers)
         s.get_best_server()
-        s.download(threads=threads)
-        s.upload(threads=threads)
+        s.download()
+        s.upload()
 
         data = s.results.dict()
-
-        download_speed = round(data['download'] * 0.000001, 2)
-        upload_speed = round(data['upload'] * 0.000001, 2)
-        ping = data['ping']
-
-        return {'Download': download_speed,
-                'Upload': upload_speed,
-                'Ping': ping}
-
+        return {
+            "Download": round(data["download"] * 0.000001, 2),  # Convert to Mbps
+            "Upload": round(data["upload"] * 0.000001, 2),  # Convert to Mbps
+            "Ping": data["ping"],
+        }
     except Exception as e:
-        print('❌ Error while performing speed test: ', e)
-        pass
+        print(f"❌ Error while performing speed test: {e}")
+        return None
 
 
 def run_latency_test():
-    latency_data = {}
+    """Runs the latency test against provided servers and returns the latency in milliseconds."""
+    if not LATENCY_SERVERS:
+        print("No latency servers defined.")
+        return {}
+
+    latency_data = {
+        server: round(run_ping_test(server) * 1000, 2)
+        for server in LATENCY_SERVERS
+        if isinstance(run_ping_test(server), float)
+    }
+    return latency_data
+
+
+def store_data(influx_filter, influx_result, write_api):
+    """Stores the given data to InfluxDB."""
+    if not influx_result:
+        print(f"❌ No data to store for {influx_filter}.")
+        return
 
     try:
-        servers = latency_servers.split()
-
-        try:
-            for server in servers:
-                pingResult = runPingTest(server)
-
-                if isinstance(pingResult, float):
-                    latency_data[server] = round(pingResult * 1000, 2)
-                else:
-                    pass
-
-            return latency_data
-
-        except Exception as e:
-            print('❌ Error while performing latency test: ', e)
-            pass
-
-    except KeyError:
-        print("No custom servers for latency tests defined.")
-        pass
-
-
-def store_data(filter, dict):
-    try:
-        for items in dict:
-            key = items
-            value = dict[items]
-
-            string = (filter + ' ' + str(key) + '=' + str(value))
-
-            write_api = client.write_api(write_options=SYNCHRONOUS)
-            write_api.write(influx_bucket, influx_org, string)
-
-            print('✅ ' + filter + ' data uploaded to influxdb.')
-
+        for key, value in influx_result.items():
+            string = f"{influx_filter} {key}={value}"
+            write_api.write(INFLUX_BUCKET, INFLUX_ORG, string)
+        print(f"✅ {influx_filter} data uploaded to InfluxDB.")
     except Exception as e:
-        print('❌ Could not store data to influxdb: ', e)
-        pass
+        print(f"❌ Could not store {influx_filter} data to InfluxDB: {e}")
 
 
 def nperf():
-    interval = int(nperf_interval)
+    """Runs the performance tests at the defined interval and stores the results in InfluxDB."""
+    if NPERF_INTERVAL < 30:
+        print("Please define an interval value >= 30!")
+        return
 
-    if isinstance(interval, int) and interval >= 30:
+    client = InfluxDBClient(url=INFLUX_URL, token=INFLUX_TOKEN)
+    write_api = client.write_api(write_options=SYNCHRONOUS)
 
-        while True:
+    while True:
+        print("----------------")
+        print("⚡ nperf started")
 
-            print('----------------')
-            print("⚡ nperf started")
+        speed_data = run_speedtest()
+        if speed_data:
+            store_data("Speed", speed_data, write_api)
 
-            store_data('Speed', run_speedtest())
-            store_data('Latency', run_latency_test())
+        latency_data = run_latency_test()
+        if latency_data:
+            store_data("Latency", latency_data, write_api)
 
-            print('----------------')
-            print('')
-
-            time.sleep(interval)
-
-    else:
-        print("Please define a interval value >= 30!")
+        print("----------------\n")
+        time.sleep(NPERF_INTERVAL)
 
 
-nperf()
+if __name__ == "__main__":
+    print_env_variables()
+    nperf()

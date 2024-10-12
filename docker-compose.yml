@@ -1,9 +1,7 @@
-version: '3.9'
-
 services:
     nperf:
         container_name: nperf
-        image: thomasglauser00/nperf:latest
+        build: ./
         environment:
             - nperf_interval=${nperf_interval}
             - latency_servers=${latency_servers}
@@ -11,17 +9,16 @@ services:
             - influx_token=${influx_token}
             - influx_bucket=${influx_bucket}
             - influx_org=${influx_org}
-        links:
-            - 'influxdb:influxdb'
-        dns:
-            - 1.1.1.1
-            - 8.8.8.8
+        depends_on:
+            - influxdb
+
     influxdb:
         container_name: influxdb
-        image: influxdb:latest
+        image: influxdb:2.7.10-alpine
         ports:
             - '8086:8086'
         volumes:
             - influxdb-storage:/var/lib/influxdb
+
 volumes:
     influxdb-storage:

@@ -60,14 +60,14 @@ influx_org = nperf
 Now start the project with docker-compose
 
 ```
-docker-compose up
+docker-compose up --force-recreate --build
 ```
 
 If everything runs, access the InfluxDB web interface at http://localhost:8086
 
 You will need to do some initial configuration and generate a token for authentication.
 
-After you generated a token, copy and paste it in the .env file and rerun `docker-compose up`.
+After you generated a token, copy and paste it in the .env file and rerun `docker-compose up --force-recreate --build`.
 nperf can now authenticate itself with the token.
 
 Done!
