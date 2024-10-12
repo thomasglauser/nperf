@@ -9,7 +9,6 @@
 
 ## Simple Network Performance Monitoring
 
-[![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/thomasglauser00/nperf)](https://hub.docker.com/r/thomasglauser00/nperf)
 [![GPLv3 License](https://img.shields.io/badge/License-GPL%20v3-yellow.svg)](https://opensource.org/licenses/)
 
 ## Features
